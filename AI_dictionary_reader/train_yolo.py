@@ -5,7 +5,7 @@ def train_dictionary_detector():
 
     results = model.train(
         data='./dictionary_yolo/dataset.yaml',
-        epochs=50,
+        epochs=100,
         imgsz=640,
         batch=8,
         device='cpu',
