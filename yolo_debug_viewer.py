@@ -2,7 +2,7 @@ import cv2
 import os
 from ultralytics import YOLO
 
-MODEL_PATH = './runs/detect/shanghai_dict_v1-2/weights/best.pt'
+MODEL_PATH = './runs/detect/shanghai_dict_v1/weights/best.pt'
 IMAGE_PATH = './picture/temp_page_8.png'
 DEBUG_OUTPUT = './debug_visual.png'
 
