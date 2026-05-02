@@ -13,8 +13,7 @@ WIDTH, HEIGHT = 1200, 1600
 COL_WIDTH = 480
 MARGIN = 80
 
-# 模拟词性标签
-TAGS = ["〈名〉", "〈动〉", "〈形〉", "〈副〉", "〈连〉", ""]
+#TAGS = ["〈名〉", "〈动〉", "〈形〉", "〈副〉", "〈连〉", ""]
 
 def get_random_chinese(min_l, max_l):
     pool = "的一是了我不人在他有这个上们来到时大地为子中你说生国年着就那和要她出也得里后自以会家可下而过天去能对小多然于心学么之都好看起发当没成只如事把还用第样道想作种开美总从无情己面最女但现前些所同日手又行意动方期它头经长儿回位分爱老因很给名法间斯知世什两次使身者被高已亲其进此话常与活正感见明问力理尔点文几定本公特做外孩相西果走将月十实向声车全信重三机工物气每并别真打太新比才便夫再书部水像眼等体却加电主界门利海受听表德少克代员许稜先口由死安写性马光白或住难望教命花结乐色更拉东神记处让母父应直字场平报友关放至张认接告入笑内英军候民岁往何度山觉路带万男边风解叫任金快原吃妈变通师立象数四失满战远格士音轻目条呢病始达深完今提求清王化空业思切怎非找片罗钱紶吗语元喜曾离飞科言干流欢约各即指合反题必该论交终林请医晚制球决窢传画保读运及则房早院量苦火布品近坐产答星精视五连司巴奇管类未朋且婚台夜青北队久乎越观落尽形影红爸百令周吧识步希亚术留市半热送兴造谈容极随演收首根讲整式取照办强石古华諣拿计您装似足双妻尼转诉米称丽客南领节衣站黑刻统断福城故历惊脸选包紧争另建维绝树系伤示愿持千史谁准联妇纪基买志静阿诗独复痛消社算义竟确酒需单治卡幸兰念举仅钟怕共毛句息功官待究跟穿室易游程号居考突皮哪费倒价图具刚脑永歌响商礼细专黄块脚味灵改据般破引食仍存众注笔甚某沉血备习校默务土微娘须试怀料调广蜖苏显赛查密议底列富梦错座参八除跑亮假印设线温虽掉京初养香停际致阳纸李纳验助激够严证帝饭忘趣支春集丈木研班普导顿睡展跳获艺六波察群皇段急庭创区奥器谢弟店否害草排背止组州朝封睛板角况曲馆育忙质河续哥呼若推境遇雨标姐充围案伦护冷警贝著雪索剧啊船险烟依斗值帮汉慢佛肯闻唱沙局伯族低玩资屋击速顾泪洲团圣旁堂兵七露园牛哭旅街劳型烈姑陈莫鱼异抱宝权鲁简态级票怪寻杀律胜份汽右洋范床舞秘午登楼贵吸责例追较职属渐左录丝牙党继托赶章智冲叶胡吉卖坚喝肉遗救修松临藏担戏善卫药悲敢靠伊村戴词森耳差短祖云规窗散迷油旧适乡架恩投弹铁博雷府压超负勒杂醒洗采毫嘴毕九冰既状乱景席珍童顶派素脱农疑练野按犯拍征坏骨余承置臓彩灯巨琴免环姆暗换技翻束增忍餐洛塞缺忆判欧层付阵玛批岛项狗休懂武革良恶恋委拥娜妙探呀营退摇弄桌熟诺宣银势奖宫忽套康供优课鸟喊降夏困刘罪亡鞋健模败伴守挥鲜财孤枪禁恐伙杰迹妹藸遍盖副坦牌江顺秋萨菜划授归浪听凡预奶雄升碃编典袋莱含盛济蒙棋端腿招释介烧误"
@@ -23,75 +22,87 @@ def get_random_chinese(min_l, max_l):
 def generate_one_page(page_num):
     img = Image.new('RGB', (WIDTH, HEIGHT), color=(255, 255, 255))
     draw = ImageDraw.Draw(img)
-    
     f_word = ImageFont.truetype(FONT_BOLD, 28)
     f_small = ImageFont.truetype(FONT_REG, 20)
     f_main = ImageFont.truetype(FONT_REG, 24)
     
     page_labels = []
-    
-    if random.random() > 0.3:
-        title = f"—— {get_random_chinese(2, 4)} · {get_random_chinese(2, 2)} ——"
-        draw.text((WIDTH//2 - 100, 40), title, font=f_small, fill=(100,100,100))
+
+    if random.random() > 0.2:
+        header = f"—— {get_random_chinese(2, 4)} {random.choice(['·', '|'])} 第 {page_num} 页 ——"
+        draw.text((WIDTH//2 - 120, 40), header, font=f_small, fill=(120,120,120))
+    draw.text((WIDTH//2 - 10, HEIGHT - 60), str(page_num), font=f_main, fill=(0,0,0))
+    draw.line([(WIDTH//2, 80), (WIDTH//2, HEIGHT-80)], fill=(230, 230, 230), width=1)
 
     columns = [MARGIN, WIDTH // 2 + MARGIN // 2]
-    
     for col_x in columns:
         current_y = 120
-        while current_y < HEIGHT - 180:
+        while current_y < HEIGHT - 150:
             word = get_random_chinese(2, 4)
-            ipa_len = random.randint(3, 18) 
-            ipa = "".join(random.choice("abcdefghijklmbopgrstuvwxyz") for _ in range(ipa_len)) + str(random.randint(11, 55))
-            tag = random.choice(TAGS)
-
-            m_len = random.randint(50, 120) if random.random() < 0.4 else random.randint(10, 30)
-            meaning = tag + get_random_chinese(m_len // 2, m_len)
             
+            ipa_len = random.randint(3, 12)
+            ipa = "".join(random.choice("abcdefghijklmbopgrst") for _ in range(ipa_len)) + str(random.randint(11, 55))
+            if random.random() < 0.4: ipa = f"[{ipa}]"
+
+            tag = random.choice(["〈名〉", "〈动〉", "〈形〉", "〈副〉", "〈连〉", "", "", ""])
+
+            r = random.random()
+            if r < 0.2: m_len = 0
+            elif r < 0.5: m_len = random.randint(60, 150)
+            else: m_len = random.randint(5, 30)
+            
+            meaning = tag + get_random_chinese(m_len//2, m_len) if m_len > 0 else ""
+
             entry_start_y = current_y
             
             draw.text((col_x, current_y), word, font=f_word, fill=(0,0,0))
             w_word = draw.textlength(word, font=f_word)
-            draw.text((col_x + w_word + 8, current_y + 4), ipa, font=f_small, fill=(80,80,80))
+
+            ipa_x = col_x + w_word + 10
+            draw.text((ipa_x, current_y + 4), ipa, font=f_small, fill=(80,80,80))
             w_ipa = draw.textlength(ipa, font=f_small)
+            
+            page_labels.append({
+                "class": 1, 
+                "box": [ipa_x - 5, current_y, ipa_x + w_ipa + 5, current_y + 35]
+            })
 
             content_to_draw = meaning
             is_first_line = True
             
-            while len(content_to_draw) > 0:
-                start_x_offset = w_word + w_ipa + 20 if is_first_line else 40
-                max_w = COL_WIDTH - start_x_offset
-                
-                line_text = ""
-                for char in content_to_draw:
-                    if draw.textlength(line_text + char, font=f_main) <= max_w:
-                        line_text += char
-                    else:
-                        break
-                
-                draw.text((col_x + start_x_offset, current_y + 2), line_text, font=f_main, fill=(0,0,0))
+            if content_to_draw:
+                while len(content_to_draw) > 0:
+                    start_x_off = w_word + w_ipa + 25 if is_first_line else 40
+                    max_w = COL_WIDTH - start_x_off
+                    
+                    line_text = ""
+                    for char in content_to_draw:
+                        if draw.textlength(line_text + char, font=f_main) <= max_w:
+                            line_text += char
+                        else: break
+                    
+                    draw.text((col_x + start_x_off, current_y + 2), line_text, font=f_main, fill=(0,0,0))
+                    content_to_draw = content_to_draw[len(line_text):]
+                    
+                    if len(content_to_draw) > 0:
+                        current_y += 30
+                        is_first_line = False
+            else:
+                pass
 
-                content_to_draw = content_to_draw[len(line_text):]
-                
-                if len(content_to_draw) > 0:
-                    current_y += 38
-                    is_first_line = False
+            entry_end_y = current_y + 35
+            page_labels.append({
+                "class": 0,
+                "box": [col_x, entry_start_y, col_x + COL_WIDTH, entry_end_y]
+            })
             
-            entry_label = {
-                "word": word,
-                "box": [col_x, entry_start_y, col_x + COL_WIDTH, current_y + 32]
-            }
-            page_labels.append(entry_label)
-            
-            current_y += 60
+            current_y = entry_end_y + random.randint(10, 20)
 
-    draw.text((WIDTH//2 - 10, HEIGHT - 70), str(page_num), font=f_main, fill=(0,0,0))
-    draw.line([(WIDTH//2, 80), (WIDTH//2, HEIGHT-80)], fill=(220, 220, 220), width=1)
-    
     img.save(f"{OUTPUT_DIR}/page_{page_num}.png")
     return page_labels
 
 all_data = {}
-for i in range(1, 201):
+for i in range(1, 5):
     all_data[f"page_{i}"] = generate_one_page(i)
 
 with open(f"{OUTPUT_DIR}/labels.json", "w", encoding="utf-8") as f:
