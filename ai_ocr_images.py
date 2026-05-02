@@ -1,59 +1,88 @@
 import cv2
+import re
+import os
+import csv
+import pandas as pd
 from ultralytics import YOLO
 from paddleocr import PaddleOCR
-import pandas as pd
-import re
+import logging
 
-model = YOLO('./runs/detect/shanghai_dict_v1-2/weights/best.pt')
+MODEL_PATH = './runs/detect/shanghai_dict_v1-2/weights/best.pt'
+IMAGE_PATH = './picture/temp_page_8.png'
+OUTPUT_CSV = 'shanghai_final_clean.csv'
 
+logging.getLogger("ppocr").setLevel(logging.ERROR)
+
+
+model = YOLO(MODEL_PATH)
 ocr = PaddleOCR(use_angle_cls=True, lang='ch')
 
-def smart_extract(img_path):
-    img = cv2.imread(img_path)
-    results = model.predict(img_path, conf=0.5)
+def get_texts_recursive(data):
+    if isinstance(data, str):
+        yield data
+    elif isinstance(data, dict):
+        for v in data.values():
+            yield from get_texts_recursive(v)
+    elif isinstance(data, (list, tuple)):
+        for item in data:
+            yield from get_texts_recursive(item)
+
+def clean_and_split_v3(raw_text):
+    clean_text = re.sub(r'[a-zA-Z0-9\s\.ʔøãẽĩõũəɛɔ\[\]\|\/\\t]+', '', str(raw_text))
+    tags = r'(名|动|形|副|代|量|叹|见|连|助|拟|〈名〉|〈动〉|〈形〉|〈副〉|①|②|③|④|~)'
+    match = re.search(f'^([\u4e00-\u9fa5]+)({tags})(.*)$', clean_text)
     
+    if match:
+        return match.group(1), f"{match.group(2)}{match.group(3)}"
+    
+    blocks = re.findall(r'[\u4e00-\u9fa5]+|~', clean_text)
+    if len(blocks) >= 2:
+        return blocks[0], "".join(blocks[1:])
+    elif len(blocks) == 1:
+        return blocks[0], clean_text
+    return None, None
+
+def run_extraction():
+    img = cv2.imread(IMAGE_PATH)
+    if img is None:
+        print(f"找不到图片: {IMAGE_PATH}")
+        return
+
+    results = model.predict(IMAGE_PATH, conf=0.4)
     boxes = results[0].boxes.xyxy.cpu().numpy()
-    boxes = sorted(boxes, key=lambda x: x[1])
     
-    extracted_data = []
+    h, w, _ = img.shape
+    mid_x = w / 2
+    left_column = [b for b in boxes if (b[0] + b[2]) / 2 < mid_x]
+    right_column = [b for b in boxes if (b[0] + b[2]) / 2 >= mid_x]
     
-    for box in boxes:
+    left_column = sorted(left_column, key=lambda b: b[1])
+    right_column = sorted(right_column, key=lambda b: b[1])
+    sorted_boxes = left_column + right_column
+
+    final_data = []
+    print(f"AI 发现了 {len(sorted_boxes)} 个条目，正在识别...")
+
+    for box in sorted_boxes:
         x1, y1, x2, y2 = map(int, box)
-        crop = img[y1:y2, x1:x2]
+        crop = img[max(0, y1-2):min(h, y2+2), max(0, x1-2):min(w, x2+2)]
         
         ocr_res = ocr.ocr(crop)
+        if not ocr_res or not ocr_res[0]: continue
         
-        if ocr_res:
-            def get_texts(data):
-                if isinstance(data, str): yield data
-                elif isinstance(data, dict):
-                    for v in data.values(): yield from get_texts(v)
-                elif isinstance(data, (list, tuple)):
-                    for item in data: yield from get_texts(item)
-
-            raw_fragments = list(get_texts(ocr_res))
-            full_text = "".join([t for t in raw_fragments if isinstance(t, str) and not t.replace('.','').isdigit()])
-
-            if not full_text.strip():
-                continue
-
-            blocks = re.findall(r'[\u4e00-\u9fa5]+|~', full_text)
-            
-            if len(blocks) >= 2:
-                word = blocks[0]
-                meaning = "".join(blocks[1:])
+        raw_fragments = list(get_texts_recursive(ocr_res))
+        full_line = "".join([str(t) for t in raw_fragments if not isinstance(t, (float, int))])
+        
+        word, meaning = clean_and_split_v3(full_line)
+        if word:
+            if isinstance(meaning, str):
                 meaning = meaning.replace('~', word)
-                extracted_data.append([word, meaning])
-            elif len(blocks) == 1:
-                extracted_data.append([blocks[0], full_text])
-            else:
-                extracted_data.append([full_text, "OCR未能分离汉字"])
-                
-    return extracted_data
+            final_data.append([word, meaning])
 
-image_to_process = './picture/temp_page_8.png'
-data = smart_extract(image_to_process)
+    if final_data:
+        df = pd.DataFrame(final_data, columns=['上海话原词', '普通话释义'])
+        df.to_csv(OUTPUT_CSV, index=False, encoding='utf-8-sig')
+        print(f"提取完成！共 {len(final_data)} 条，保存至 {OUTPUT_CSV}")
 
-df = pd.DataFrame(data, columns=['上海话原词', '普通话释义'])
-df.to_csv('final_dictionary_result.csv', index=False, encoding='utf-8-sig')
-print(f"提取完成，共识别到 {len(data)} 条词目！")
+if __name__ == '__main__':
+    run_extraction()
