@@ -102,7 +102,7 @@ def generate_one_page(page_num):
     return page_labels
 
 all_data = {}
-for i in range(1, 5):
+for i in range(1, 201):
     all_data[f"page_{i}"] = generate_one_page(i)
 
 with open(f"{OUTPUT_DIR}/labels.json", "w", encoding="utf-8") as f:
