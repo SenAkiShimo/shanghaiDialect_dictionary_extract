@@ -30,47 +30,61 @@ def generate_one_page(page_num):
     
     page_labels = []
     
+    if random.random() > 0.3:
+        title = f"—— {get_random_chinese(2, 4)} · {get_random_chinese(2, 2)} ——"
+        draw.text((WIDTH//2 - 100, 40), title, font=f_small, fill=(100,100,100))
+
     columns = [MARGIN, WIDTH // 2 + MARGIN // 2]
     
     for col_x in columns:
-        current_y = 100
-        while current_y < HEIGHT - 150:
+        current_y = 120
+        while current_y < HEIGHT - 180:
             word = get_random_chinese(2, 4)
             ipa = "".join(random.choice("abcdefg") for _ in range(3)) + str(random.randint(11, 55))
             tag = random.choice(TAGS)
-            meaning = tag + get_random_chinese(10, 25)
+
+            m_len = random.randint(50, 120) if random.random() < 0.4 else random.randint(10, 30)
+            meaning = tag + get_random_chinese(m_len // 2, m_len)
+            
+            entry_start_y = current_y
             
             draw.text((col_x, current_y), word, font=f_word, fill=(0,0,0))
             w_word = draw.textlength(word, font=f_word)
-            
             draw.text((col_x + w_word + 8, current_y + 4), ipa, font=f_small, fill=(80,80,80))
             w_ipa = draw.textlength(ipa, font=f_small)
+
+            content_to_draw = meaning
+            is_first_line = True
             
-            content_start_x = col_x + w_word + w_ipa + 20
-            remaining_w = (col_x + COL_WIDTH) - content_start_x
+            while len(content_to_draw) > 0:
+                start_x_offset = w_word + w_ipa + 20 if is_first_line else 40
+                max_w = COL_WIDTH - start_x_offset
+                
+                line_text = ""
+                for char in content_to_draw:
+                    if draw.textlength(line_text + char, font=f_main) <= max_w:
+                        line_text += char
+                    else:
+                        break
+                
+                draw.text((col_x + start_x_offset, current_y + 2), line_text, font=f_main, fill=(0,0,0))
+
+                content_to_draw = content_to_draw[len(line_text):]
+                
+                if len(content_to_draw) > 0:
+                    current_y += 38
+                    is_first_line = False
             
-            first_line = ""
-            second_line = ""
-            for char in meaning:
-                if draw.textlength(first_line + char, font=f_main) < remaining_w:
-                    first_line += char
-                else:
-                    second_line += char
-            
-            draw.text((content_start_x, current_y + 2), first_line, font=f_main, fill=(0,0,0))
-            
-            entry_label = {"word": word, "meaning": meaning, "box": [col_x, current_y, col_x + COL_WIDTH, current_y + 30]}
-            
-            if second_line:
-                current_y += 35
-                draw.text((col_x + 30, current_y + 2), second_line, font=f_main, fill=(0,0,0))
-                entry_label["box"][3] += 35
-            
+            entry_label = {
+                "word": word,
+                "box": [col_x, entry_start_y, col_x + COL_WIDTH, current_y + 32]
+            }
             page_labels.append(entry_label)
-            current_y += 55
             
-    draw.line([(WIDTH//2, 50), (WIDTH//2, HEIGHT-50)], fill=(200,200,200), width=1)
-    draw.text((WIDTH//2 - 10, HEIGHT-60), str(page_num), font=f_main, fill=(0,0,0))
+            current_y += 60
+
+    draw.text((WIDTH//2 - 10, HEIGHT - 70), str(page_num), font=f_main, fill=(0,0,0))
+    draw.line([(WIDTH//2, 80), (WIDTH//2, HEIGHT-80)], fill=(220, 220, 220), width=1)
     
     img.save(f"{OUTPUT_DIR}/page_{page_num}.png")
     return page_labels
