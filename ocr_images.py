@@ -1,55 +1,87 @@
 import os
 import re
-import pandas as pd
-from paddleocr import PaddleOCR
+import cv2
+import csv
 import logging
+from paddleocr import PaddleOCR
+
 
 logging.getLogger("ppocr").setLevel(logging.ERROR)
-
-
 ocr = PaddleOCR(use_angle_cls=True, lang='ch')
 
-def extract_from_images(image_folder):
-    all_data = []
-    images = sorted([f for f in os.listdir(image_folder) if f.endswith(('.png', '.jpg', '.jpeg'))])
+def extract_entry(text):
+    text = re.sub(r'^[0-9\.\s]+', '', text)
+    blocks = re.findall(r'[\u4e00-\u9fa5]+|~|[①②③④⑤]|\<名\>|\<动\>|\(气\)', text)
     
-    for img_name in images:
-        img_path = os.path.join(image_folder, img_name)
-        print(f"正在识别: {img_name}...")
+    if len(blocks) >= 2:
+        word = blocks[0]
+        meaning = "".join(blocks[1:])
+
+        return [word, meaning]
+    
+    elif len(blocks) == 1:
+        return [blocks[0], "（仅词条）"]
         
-        result = ocr.ocr(img_path)
-        if not result or result[0] is None:
-            continue
+    return None
 
-        for line_info in result[0]:
-            raw_text = line_info[1][0]
-            
-            clean_text = re.sub(r'[a-zA-Z0-9\s\.\[\]\(\)\/ʔø\?\'\"]+', '', raw_text)
-            
-            chinese_blocks = re.findall(r'[\u4e00-\u9fa5]+|~', clean_text)
-            
-            if len(chinese_blocks) >= 2:
-                word = chinese_blocks[0]
-                meaning = "".join(chinese_blocks[1:])
-                all_data.append([word, meaning])
-            elif len(chinese_blocks) == 1:
-                all_data.append([chinese_blocks[0], ""])
-
-    return all_data
-
-folder_path = "./"
-output_csv = "shanghai_dict_final.csv"
-
-extracted_results = extract_from_images(folder_path)
-
-if extracted_results:
-    df = pd.DataFrame(extracted_results, columns=['上海话原词', '普通话释义'])
+def process_dictionary_page(img_path):
+    img = cv2.imread(img_path)
+    if img is None: return []
+    h, w, _ = img.shape
     
-    for i in range(len(df)):
-        if '~' in df.loc[i, '普通话释义']:
-            df.loc[i, '普通话释义'] = df.loc[i, '普通话释义'].replace('~', df.loc[i, '上海话原词'])
+    parts = [img[:, :w//2], img[:, w//2:]]
+    page_data = []
+
+    for i, part in enumerate(parts):
+        part_path = f"temp_part_{i}.png"
+        cv2.imwrite(part_path, part)
+        
+
+        raw_result = ocr.ocr(part_path)
+        if not raw_result: continue
+
+        lines_dict = {}
+        for item in raw_result:
+            if not isinstance(item, dict) or 'dt_polygons' not in item:
+                continue
+                
+            text = item.get('rec_text', '')
+            poly = item['dt_polygons']
+            y_center = (poly[0][1] + poly[2][1]) / 2
+            x_start = poly[0][0]
+
+            found_line = False
+            for existing_y in lines_dict.keys():
+                if abs(existing_y - y_center) < 20:
+                    lines_dict[existing_y].append((x_start, text))
+                    found_line = True
+                    break
+            if not found_line:
+                lines_dict[y_center] = [(x_start, text)]
+
+        for y in sorted(lines_dict.keys()):
+            row_items = sorted(lines_dict[y], key=lambda x: x[0])
+            full_row_text = "".join([it[1] for it in row_items])
             
-    df.to_csv(output_csv, index=False, encoding='utf-8-sig')
-    print(f"\n提取完成！共得到 {len(df)} 条数据，已保存至: {output_csv}")
+            entry = extract_entry(full_row_text)
+            if entry:
+                page_data.append(entry)
+                
+    return page_data
+
+img_input = "temp_page_10.png" 
+output_csv = "shanghai_v7_final.csv"
+
+if os.path.exists(img_input):
+    results = process_dictionary_page(img_input)
+    with open(output_csv, 'w', newline='', encoding='utf-8-sig') as f:
+        writer = csv.writer(f)
+        writer.writerow(['上海话原词', '普通话释义'])
+        for row in results:
+            word, meaning = row
+            if '~' in meaning:
+                meaning = meaning.replace('~', word)
+            writer.writerow([word, meaning])
+    print(f"处理完成，提取了 {len(results)} 条。")
 else:
-    print("\n未能在图片中识别到有效内容，请检查图片路径或清晰度。")
+    print(f"错误：找不到图片 {img_input}")
