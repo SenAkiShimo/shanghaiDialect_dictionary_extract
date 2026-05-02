@@ -23,24 +23,32 @@ def smart_extract(img_path):
         
         ocr_res = ocr.ocr(crop)
         
-        if ocr_res and ocr_res[0]:
-            full_text = ""
-            for line in ocr_res[0]:
-                if isinstance(line, list) and len(line) > 1:
-                    full_text += line[1][0]
+        if ocr_res:
+            def get_texts(data):
+                if isinstance(data, str): yield data
+                elif isinstance(data, dict):
+                    for v in data.values(): yield from get_texts(v)
+                elif isinstance(data, (list, tuple)):
+                    for item in data: yield from get_texts(item)
+
+            raw_fragments = list(get_texts(ocr_res))
+            full_text = "".join([t for t in raw_fragments if isinstance(t, str) and not t.replace('.','').isdigit()])
+
+            if not full_text.strip():
+                continue
+
+            blocks = re.findall(r'[\u4e00-\u9fa5]+|~', full_text)
             
-            match = re.search(r'^([\u4e00-\u9fa5]+).*?([\u4e00-\u9fa5〈（[~].*)$', full_text)
-            if match:
-                word = match.group(1)
-                meaning = match.group(2)
+            if len(blocks) >= 2:
+                word = blocks[0]
+                meaning = "".join(blocks[1:])
+                meaning = meaning.replace('~', word)
                 extracted_data.append([word, meaning])
+            elif len(blocks) == 1:
+                extracted_data.append([blocks[0], full_text])
             else:
-                clean_chars = re.findall(r'[\u4e00-\u9fa5]+|~', full_text)
-                if len(clean_chars) >= 2:
-                    extracted_data.append([clean_chars[0], "".join(clean_chars[1:])])
-                else:
-                    extracted_data.append([full_text, "待拆分"])
-                    
+                extracted_data.append([full_text, "OCR未能分离汉字"])
+                
     return extracted_data
 
 image_to_process = './picture/temp_page_8.png'
