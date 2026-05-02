@@ -40,7 +40,8 @@ def generate_one_page(page_num):
         current_y = 120
         while current_y < HEIGHT - 180:
             word = get_random_chinese(2, 4)
-            ipa = "".join(random.choice("abcdefg") for _ in range(3)) + str(random.randint(11, 55))
+            ipa_len = random.randint(3, 18) 
+            ipa = "".join(random.choice("abcdefghijklmbopgrstuvwxyz") for _ in range(ipa_len)) + str(random.randint(11, 55))
             tag = random.choice(TAGS)
 
             m_len = random.randint(50, 120) if random.random() < 0.4 else random.randint(10, 30)
