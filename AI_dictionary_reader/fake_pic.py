@@ -8,8 +8,8 @@ import cv2
 OUTPUT_DIR = "fake_dictionary_dataset"
 if not os.path.exists(OUTPUT_DIR): os.makedirs(OUTPUT_DIR)
 
-FONT_REG = "/System/Library/Fonts/STHeiti Light.ttc"
-FONT_BOLD = "/System/Library/Fonts/STHeiti Medium.ttc"
+FONT_REG = "./Songti.ttc"
+FONT_BOLD = "./Songti_bold.ttf"
 
 WIDTH, HEIGHT = 1200, 1600
 COL_WIDTH = 480
@@ -61,7 +61,7 @@ def generate_one_page(page_num):
     
     f_word = ImageFont.truetype(FONT_BOLD, 28)
     f_small = ImageFont.truetype(FONT_REG, 20)
-    f_main = ImageFont.truetype(FONT_REG, 24)
+    f_main = ImageFont.truetype(FONT_REG, 20)
     
     page_labels = []
 

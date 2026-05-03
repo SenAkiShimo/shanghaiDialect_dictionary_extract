@@ -13,7 +13,6 @@ def train_dictionary_detector():
         mixup=0.1
     )
 
-
     metrics = model.val()
     print(f"训练完成！模型位置: runs/detect/shanghai_dict_v1/weights/best.pt")
 
