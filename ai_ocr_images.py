@@ -7,7 +7,7 @@ from ultralytics import YOLO
 from paddleocr import PaddleOCR
 import logging
 
-MODEL_PATH = './runs/detect/shanghai_dict_v1/weights/best.pt'
+MODEL_PATH = './runs/detect/shanghai_dict/v1_high_res/weights/best.pt'
 IMAGE_PATH = './picture/temp_page_8.png'
 OUTPUT_CSV = 'shanghai_final_clean.csv'
 
