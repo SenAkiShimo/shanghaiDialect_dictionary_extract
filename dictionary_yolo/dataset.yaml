@@ -4,4 +4,6 @@ val: val/images
 
 names:
   0: entry
-  1: ignore 
+  1: word
+  2: ipa
+  3: meaning

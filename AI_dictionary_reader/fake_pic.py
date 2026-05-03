@@ -93,13 +93,17 @@ def generate_one_page(page_num):
             
             draw.text((col_x, current_y), word, font=f_word, fill=(0,0,0))
             w_word = draw.textlength(word, font=f_word)
+            page_labels.append({
+                "class": 1, 
+                "box": [col_x, current_y, col_x + w_word, current_y + 30]
+                })
             
             ipa_x = col_x + w_word + 10
             draw.text((ipa_x, current_y + 4), ipa, font=f_small, fill=(60,60,60))
             w_ipa = draw.textlength(ipa, font=f_small)
             
             page_labels.append({
-                "class": 1,
+                "class": 2,
                 "box": [ipa_x - 2, current_y, ipa_x + w_ipa + 2, current_y + 30]
             })
 
@@ -113,8 +117,24 @@ def generate_one_page(page_num):
                     for char in content_to_draw:
                         if draw.textlength(line_text + char, font=f_main) <= max_w:
                             line_text += char
-                        else: break
-                    draw.text((col_x + start_x_off, current_y + 2), line_text, font=f_main, fill=(0,0,0))
+                        else:
+                            break
+                    
+                    this_line_x = col_x + start_x_off
+                    this_line_y = current_y + 2
+                    
+                    draw.text((this_line_x, this_line_y), line_text, font=f_main, fill=(0,0,0))
+                    
+                    w_line = draw.textlength(line_text, font=f_main)
+                    page_labels.append({
+                        "class": 3,
+                        "box": [
+                            float(this_line_x), 
+                            float(this_line_y), 
+                            float(this_line_x + w_line), 
+                            float(this_line_y + 28)
+                        ]
+                    })
                     content_to_draw = content_to_draw[len(line_text):]
                     if len(content_to_draw) > 0:
                         current_y += 34
