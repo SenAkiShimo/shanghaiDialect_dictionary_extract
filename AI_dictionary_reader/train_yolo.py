@@ -5,18 +5,15 @@ def train_dictionary_detector():
 
     results = model.train(
         data='./dictionary_yolo/dataset.yaml', 
-        epochs=100,
-        imgsz=640,
-        batch=16,
-        device='cpu',           
-        name='shanghai_dict_v1', 
-        patience=20,
-        close_mosaic=10,
-        optimizer='AdamW',
-        lr0=0.01
+        epochs=150,
+        imgsz=640, 
+        batch=16, 
+        device='cpu', 
+        patience=30,
+        mixup=0.1
     )
-    
-    # 3. 验证
+
+
     metrics = model.val()
     print(f"训练完成！模型位置: runs/detect/shanghai_dict_v1/weights/best.pt")
 
