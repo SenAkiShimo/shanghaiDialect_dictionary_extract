@@ -199,7 +199,7 @@ def default_converter(obj):
     raise TypeError(f"Object of type {obj.__class__.__name__} is not JSON serializable")
 
 all_data = {}
-for i in range(1, 5):
+for i in range(1, 201):
     img_array, labels = generate_one_page(i)
     cv2.imwrite(f"{OUTPUT_DIR}/page_{i}.jpg", img_array)
     all_data[f"page_{i}"] = labels 
