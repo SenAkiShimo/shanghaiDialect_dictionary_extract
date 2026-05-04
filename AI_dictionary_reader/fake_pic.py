@@ -94,7 +94,7 @@ def generate_one_page(page_num):
             draw.text((col_x, current_y), word, font=f_word, fill=(0,0,0))
             w_word = draw.textlength(word, font=f_word)
             page_labels.append({
-                "class": 1, 
+                "class": 0, 
                 "box": [col_x, current_y, col_x + w_word, current_y + 30]
                 })
             
@@ -103,7 +103,7 @@ def generate_one_page(page_num):
             w_ipa = draw.textlength(ipa, font=f_small)
             
             page_labels.append({
-                "class": 2,
+                "class": 1,
                 "box": [ipa_x - 2, current_y, ipa_x + w_ipa + 2, current_y + 30]
             })
 
@@ -127,7 +127,7 @@ def generate_one_page(page_num):
                     
                     w_line = draw.textlength(line_text, font=f_main)
                     page_labels.append({
-                        "class": 3,
+                        "class": 2,
                         "box": [
                             float(this_line_x), 
                             float(this_line_y), 
@@ -141,47 +141,51 @@ def generate_one_page(page_num):
                         is_first_line = False
 
             entry_end_y = current_y + 32
-            page_labels.append({
-                "class": 0,
-                "box": [col_x - 4, entry_start_y - 2, col_x + COL_WIDTH + 4, entry_end_y + 2]
-            })
+            #page_labels.append({
+            #    "class": 0,
+            #    "box": [col_x - 4, entry_start_y - 2, col_x + COL_WIDTH + 4, entry_end_y + 2]
+            #})
             
             current_y = entry_end_y + random.randint(10, 25)
 
     final_img = np.array(img_pil)
-    
-    if random.random() < 0.20:
-        if random.random() < 0.5:
-            noise = np.random.randint(235, 256, (HEIGHT, WIDTH, 3), dtype='uint8')
-            final_img = cv2.addWeighted(final_img, 0.9, noise, 0.1, 0)
 
-        gauss = np.random.normal(0, 3, (HEIGHT, WIDTH, 3)).astype('uint8')
-        final_img = cv2.add(final_img, gauss)
-
-        angle = random.uniform(-0.5, 0.5)
-        center = (WIDTH // 2, HEIGHT // 2)
-        M = cv2.getRotationMatrix2D(center, angle, 1.0)
-        final_img = cv2.warpAffine(final_img, M, (WIDTH, HEIGHT), borderValue=(255, 255, 255))
-
-    angle = random.uniform(-1.5, 1.5) 
+    angle = random.uniform(-2.0, 2.0)
     center = (WIDTH // 2, HEIGHT // 2)
     M = cv2.getRotationMatrix2D(center, angle, 1.0)
-    
+
     final_img = cv2.warpAffine(final_img, M, (WIDTH, HEIGHT), borderValue=(255, 255, 255))
-    
+
+    if random.random() < 0.20:
+        noise = np.random.randint(235, 256, (HEIGHT, WIDTH, 3), dtype='uint8')
+        final_img = cv2.addWeighted(final_img, 0.9, noise, 0.1, 0)
+        gauss = np.random.normal(0, 2, (HEIGHT, WIDTH, 3)).astype('uint8')
+        final_img = cv2.add(final_img, gauss)
+
     rotated_labels = []
     for label in page_labels:
         box = label["box"]
         pts = np.array([
-            [box[0], box[1]], [box[2], box[1]], 
-            [box[2], box[3]], [box[0], box[3]]
+            [box[0], box[1]], # 左上
+            [box[2], box[1]], # 右上
+            [box[2], box[3]], # 右下
+            [box[0], box[3]]  # 左下
         ])
+        
         ones = np.ones(shape=(len(pts), 1))
         pts_ones = np.concatenate([pts, ones], axis=1)
         tr_pts = M.dot(pts_ones.T).T
         
         nx1, ny1 = tr_pts[:, 0].min(), tr_pts[:, 1].min()
         nx2, ny2 = tr_pts[:, 0].max(), tr_pts[:, 1].max()
+
+        nx1 = max(0, min(WIDTH, nx1))
+        nx2 = max(0, min(WIDTH, nx2))
+        ny1 = max(0, min(HEIGHT, ny1))
+        ny2 = max(0, min(HEIGHT, ny2))
+
+        if (nx2 - nx1) < 2 or (ny2 - ny1) < 2:
+            continue
 
         new_label = label.copy()
         new_label["box"] = [float(nx1), float(ny1), float(nx2), float(ny2)]
