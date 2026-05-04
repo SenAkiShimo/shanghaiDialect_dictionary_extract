@@ -51,25 +51,31 @@ def generate_title(draw):
         sections = ["一", "二", "三", "四", "五", "六"]
         full_text = f"{random.choice(sections)}、{title_text}"
         draw.text(((WIDTH - draw.textlength(full_text, f_title))//2, text_y), full_text, font=f_title, fill=(0,0,0))
+    return [float(rect_x1), float(rect_y1), float(rect_x2), float(rect_y2)]
 
 def generate_one_page(page_num):
     img_pil = Image.new('RGB', (WIDTH, HEIGHT), color=(255, 255, 255))
     draw = ImageDraw.Draw(img_pil)
 
+    page_labels = []
+
     if random.random() > 0.15:
-        generate_title(draw)
+        title_box = generate_title(draw)
+        page_labels.append({
+            "class": 3, 
+            "box": title_box
+        })
     
     f_word = ImageFont.truetype(FONT_BOLD, 28)
     f_small = ImageFont.truetype(FONT_REG, 20)
     f_main = ImageFont.truetype(FONT_REG, 24)
     
-    page_labels = []
 
-    if random.random() > 0.2:
-        header = f"—— {get_random_chinese(2, 4)} {random.choice(['·', '|'])} 第 {page_num} 页 ——"
-        draw.text((WIDTH//2 - 120, 40), header, font=f_small, fill=(100,100,100))
-    draw.text((WIDTH//2 - 10, HEIGHT - 70), str(page_num), font=f_main, fill=(50,50,50))
-    draw.line([(WIDTH//2, 80), (WIDTH//2, HEIGHT-80)], fill=(220, 220, 220), width=1)
+    #if random.random() > 0.2:
+    #    header = f"—— {get_random_chinese(2, 4)} {random.choice(['·', '|'])} 第 {page_num} 页 ——"
+    #    draw.text((WIDTH//2 - 120, 40), header, font=f_small, fill=(100,100,100))
+    #draw.text((WIDTH//2 - 10, HEIGHT - 70), str(page_num), font=f_main, fill=(50,50,50))
+    #draw.line([(WIDTH//2, 80), (WIDTH//2, HEIGHT-80)], fill=(220, 220, 220), width=1)
 
     columns = [MARGIN, WIDTH // 2 + MARGIN // 2]
     for col_x in columns:
@@ -203,7 +209,7 @@ def default_converter(obj):
     raise TypeError(f"Object of type {obj.__class__.__name__} is not JSON serializable")
 
 all_data = {}
-for i in range(1, 201):
+for i in range(1, 2):
     img_array, labels = generate_one_page(i)
     cv2.imwrite(f"{OUTPUT_DIR}/page_{i}.jpg", img_array)
     all_data[f"page_{i}"] = labels 

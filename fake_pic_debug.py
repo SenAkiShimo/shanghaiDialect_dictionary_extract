@@ -38,7 +38,14 @@ def verify_labels():
         p1 = (int(box[0]), int(box[1]))
         p2 = (int(box[2]), int(box[3]))
 
-        color = (0, 255, 0) if cls == 0 else (0, 0, 255)
+        color_map = {
+        0: (0, 255, 0),
+        1: (255, 0, 0),
+        2: (255, 255, 0),
+        3: (0, 165, 255)
+        }
+
+        color = color_map.get(cls, (255, 255, 255))
 
         cv2.rectangle(img, p1, p2, color, 2)
         
