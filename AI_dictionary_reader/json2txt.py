@@ -14,20 +14,26 @@ def convert_to_yolo_format(json_data, output_dir):
         
         with open(txt_path, "w") as f:
             for item in labels:
-                cls_id = item.get("class", 0)
-                box = item["box"]  # [x1, y1, x2, y2]
+                cls_id = item["class"] 
+                box = item["box"]
+
+                bw = box[2] - box[0]
+                bh = box[3] - box[1]
+
+                if bw <= 1 or bh <= 1:
+                    continue
 
                 x_center = (box[0] + box[2]) / 2 / W
                 y_center = (box[1] + box[3]) / 2 / H
-                width = (box[2] - box[0]) / W
-                height = (box[3] - box[1]) / H
+                width = bw / W
+                height = bh / H
                 
-                x_center = max(0, min(1, x_center))
-                y_center = max(0, min(1, y_center))
-                width = max(0, min(1, width))
-                height = max(0, min(1, height))
+                x_c = max(0.0, min(1.0, x_center))
+                y_c = max(0.0, min(1.0, y_center))
+                w = max(0.0, min(1.0, width))
+                h = max(0.0, min(1.0, height))
                 
-                f.write(f"{cls_id} {x_center:.6f} {y_center:.6f} {width:.6f} {height:.6f}\n")
+                f.write(f"{cls_id} {x_c:.6f} {y_c:.6f} {w:.6f} {h:.6f}\n")
 
 labels_json_path = "fake_dictionary_dataset/labels.json"
 output_label_dir = "fake_dictionary_dataset/labels"
