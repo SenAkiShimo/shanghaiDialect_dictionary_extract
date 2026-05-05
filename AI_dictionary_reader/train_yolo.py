@@ -8,9 +8,9 @@ def train_dictionary_detector():
         data='./dictionary_yolo/dataset.yaml', 
         epochs=150, 
 
-        imgsz=1280, 
+        imgsz=960, 
         
-        device='mps', 
+        device='cpu', 
 
         batch=8,
         rect=True,
